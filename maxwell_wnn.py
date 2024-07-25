@@ -13,47 +13,33 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Layer, Dense, BatchNormalization, Flatten
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import backend as K
 
+# Load the dataset
+data_max = pd.read_csv("maxwell.csv")
+
 # Data Preprocessing
-def data_china():
+data_max.head()  # Display the first few rows of the dataset
+
+# Drop unnecessary columns and convert data to float
+df = data_max.drop(columns=['id'])
+df_for_training = df.astype(float)
+
+# Scale the features to the range (0, 1) for better model performance
+scaler = MinMaxScaler(feature_range=(0, 1))
+scaler = scaler.fit(df_for_training)
+df_for_training_scaled = scaler.transform(df_for_training)
+
+def load_maxwell_data():
     """
-    Load and preprocess the dataset from a CSV file.
+    Load and return features (X) and target (y) from the preprocessed dataset.
     """
+    X = df_for_training.iloc[:, :-1].values  # Features (all columns except the last one)
+    y = df_for_training.iloc[:, -1].values   # Effort (last column)
+    return X, y
 
-    # Load the dataset from a CSV file specified in CFG[1]
-    df = pd.read_csv('china.csv')
-
-    # Drop the 'id' and 'ID' columns as they are not useful for training
-    df = df.drop(columns=['id', 'ID'])
-
-    # Convert all data to float type
-    df_for_training = df.astype(float)
-
-    # Scale the features to the range (0, 1) for better model performance
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler = scaler.fit(df_for_training)
-    df_for_training_scaled = scaler.transform(df_for_training)
-
-    # Prepare training data
-    trainX = []
-    trainY = []
-    n_future = 2  # Number of samples we want to look into the future
-    n_past = 2    # Number of past samples we want to use to predict the future
-
-    # Generate the input and output sequences for the model
-    for i in range(n_past, len(df_for_training_scaled) - n_future + 1):
-        trainX.append(df_for_training_scaled[i - n_past:i, 0:df_for_training.shape[1]])
-        trainY.append(df_for_training_scaled[i + n_future - 1:i + n_future, df_for_training.shape[1] - 1])
-
-    # Convert lists to numpy arrays
-    trainX, trainY = np.array(trainX), np.array(trainY)
-
-    return trainX, trainY
-
-# Load and split the data into training and testing sets
-totalX, totalY = data_china()
+# Load data and split into training and testing sets
+totalX, totalY = load_maxwell_data()
 X_train, X_test, y_train, y_test = train_test_split(totalX, totalY, test_size=0.25, random_state=42)
 
 # Define the Morlet wavelet function as a custom layer
@@ -62,7 +48,7 @@ class MorletWavelet(Layer):
         super(MorletWavelet, self).__init__(**kwargs)
 
     def call(self, inputs):
-        sigma = 1.0  # Scale parameter
+        sigma = 1.0  # Scale parameter for the wavelet
         return K.exp(-0.5 * K.square(inputs / sigma)) * K.cos(5.0 * inputs)
 
 # Build the neural network model
@@ -100,17 +86,17 @@ model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')  #
 # Display the model summary
 model.summary()
 
-# Train the model
-history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.1)
+# Train the model without any output
+history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.1, verbose=0)
 
 # Plot the training and validation loss
-plt.plot(history.history['loss'], label='train_loss')
-plt.plot(history.history['val_loss'], label='val_loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend()
-plt.title('Training and Validation Loss')
-plt.show()
+# plt.plot(history.history['loss'], label='train_loss')
+# plt.plot(history.history['val_loss'], label='val_loss')
+# plt.xlabel('Epoch')
+# plt.ylabel('Loss')
+# plt.legend()
+# plt.title('Training and Validation Loss')
+# plt.show()
 
 # Make predictions on the test set
 predicted_values = model.predict(X_test)
