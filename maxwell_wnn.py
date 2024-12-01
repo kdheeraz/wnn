@@ -16,7 +16,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 
 # Load the dataset
-data_max = pd.read_csv("maxwell.csv")
+data_max = pd.read_csv("https://raw.githubusercontent.com/kdheeraz/wnn/refs/heads/main/MAXWELL.csv")
 
 # Data Preprocessing
 data_max.head()  # Display the first few rows of the dataset
