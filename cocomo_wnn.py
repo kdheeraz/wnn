@@ -18,7 +18,7 @@ from tensorflow.keras import backend as K
 
 # Data Preprocessing
 def load_cocomo_data():
-    data = pd.read_csv("./cocomo81.csv")
+    data = pd.read_csv("https://raw.githubusercontent.com/kdheeraz/wnn/refs/heads/main/cocomo81.csv")
     X = data.iloc[:, :-1].values  # Features
     y = data.iloc[:, -1].values  # Effort
     return X, y
