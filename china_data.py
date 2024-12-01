@@ -23,7 +23,7 @@ def data_china():
     """
 
     # Load the dataset from a CSV file specified in CFG[1]
-    df = pd.read_csv('china.csv')
+    df = pd.read_csv('https://raw.githubusercontent.com/kdheeraz/wnn/refs/heads/main/china.csv')
 
     # Drop the 'id' and 'ID' columns as they are not useful for training
     df = df.drop(columns=['id', 'ID'])
